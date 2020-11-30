@@ -1,0 +1,31 @@
+{
+  "name": "miniblogue",
+  "version": "1.0.0",
+  "description": "api rest authentification et posts",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "server": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/glotec/MiniBlogue.git"
+  },
+  "keywords": [
+    "server",
+    "http",
+    "api",
+    "rest"
+  ],
+  "author": "Glotec",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/glotec/MiniBlogue/issues"
+  },
+  "homepage": "https://github.com/glotec/MiniBlogue#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "sequelize": "^6.3.5",
+    "sequelize-cli": "^6.2.0"
+  }
+}
