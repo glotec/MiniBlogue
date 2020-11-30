@@ -1,10 +1,14 @@
-const express = require('express');
+var express = require('express');
+var bodyParser = require('body-parser');
+var apiRouter = require('./apiRouter').router;
 
 const app = express();
 
-// const usersRoute = require('./routes/api/users');
+//Body Parser configuration
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json()); 
 
-// app.use('/', usersRoute);
+app.use('/api/', apiRouter);
 
 app.get('/', (req, res) => {
     res.send('salut');
