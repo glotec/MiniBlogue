@@ -2,7 +2,7 @@
 var express = require('express');
 var usersCtrl = require('./routes/api/usersCtrl');
 
-//Routes
+//Router
 exports.router  = (() => {
     var apiRouter = express.Router();
 
