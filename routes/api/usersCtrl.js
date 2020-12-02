@@ -6,7 +6,7 @@ var asyncLib = require('async');
 
 //constants
 const EMIAL_REGEX = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-const PASSWORD_REGEX = /^(?=.*\d).{4.8}$/;
+const PASSWORD_REGEX  = /^(?=.*\d).{4,8}$/;
 
 //Routes
 module.exports = {
@@ -33,9 +33,9 @@ module.exports = {
             return res.status(400).json({ 'error': 'email is not valid' });
         }
 
-        if (!PASSWORD_REGEX.test(password))
+        if (!PASSWORD_REGEX.test(password)) 
         {
-            return res.status(400).json({ 'error': 'password is not valid (must have a length 4-8 caracters and include 1 number at list' });
+        return res.status(400).json({ 'error': 'password invalid (must length 4 - 8 and include 1 number at least)' });
         }
 
         //waterfall
@@ -88,44 +88,6 @@ module.exports = {
             }
             else return res.status(500).json({ 'error': 'can not add user' });
         })
-
-        //verify pseud length, email regex, password etc.
-        // models.User.findOne({
-        //     attributes: ['email'],
-        //     where: { email: email }
-        // })
-        // .then((userFound) => {
-        //     if (!userFound) 
-        //     {
-
-        //         bcrypt.hash(password, 5, (err, bcryptedPassword) => {
-        //             var newUser = models.User.create({
-        //                 email: email,
-        //                 username: username,
-        //                 password: bcryptedPassword,
-        //                 bio: bio,
-        //                 isAdmin: 0
-        //             })
-        //             .then((newUser) => {
-        //                 return res.status(201).json({
-        //                     'userId': newUser.id
-        //                 })
-        //             })
-        //             .catch((err) => {
-        //                 return res.status(500).json({ 'error': 'unable to verify user' });
-        //             });
-        //         });
-
-        //     }
-        //     else
-        //     {
-        //         return res.status(409).json({ 'error': 'user already exist' });
-        //     }
-        // })
-        // .catch((err) => {
-        //     return res.status(500).json({ 'error': 'unable to verify user' });
-        // });
-        
     },
     login: (req, res) => {
 
@@ -138,37 +100,52 @@ module.exports = {
             return res.status(400).json({ 'error': 'missing params' });
         }
 
-        //verify mail & password length
-
-        models.User.findOne({
-            where: { email: email }
-        })
-        .then((userFound) => {
-            if (userFound)
-            {
-
-                bcrypt.compare(password, userFound.password, (errBcryt, resBcrypt) => {
-                    if (resBcrypt)
-                    {
-                        return res.status(200).json({
-                            'userId': userFound.id,
-                            'token': jwtUtils.generateTokenForUser(userFound)
-                        });
-                    }
-                    else
-                    {
-                        return res.status(403).json({ 'error': 'invalid password' });
-                    }
+        asyncLib.waterfall([
+            (done) =>{
+                models.User.findOne({
+                    where: { email: email }
                 })
+                .then((userFound) => {
+                    done(null, userFound);
+                })
+                .catch((err) => {
+                    return res.status(500).json({ 'error': 'unable to verify user' });
+                });
+            },
+            (userFound, done) => {
+                if (userFound)
+                {
+                    bcrypt.compare(password, userFound.password, (errBcryt, resBcrypt) => {
+                        done(null, userFound, resBcrypt);
+                    });
+                }
+                else
+                {
+                    return res.status(404).json({ 'error': 'user not exist in DB' });
+                }
+            },
+            (userFound, resBcrypt, done) => {
+                if (resBcrypt) 
+                {
+                    done(userFound);
+                }
+                else
+                {
+                    return res.status(403).json({ 'error': 'invalid password' });
+                }
+            }
+        ], (userFound) => {
+            if (userFound) 
+            {
+                return res.status(201).json({
+                    'userId': userFound.id,
+                    'token': jwtUtils.generateTokenForUser(userFound)
+                });
             }
             else
             {
-                return res.status(404).json({ 'error': 'user not exist' });
+                return res.status(500).json({ 'error': 'cannot log on user' });
             }
-        })
-        .catch((err) => {
-            return res.status(500).json({ 'error': 'unable to verify user' });
         });
-
     }
 }
